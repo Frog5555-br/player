@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>🎬 Player Privado</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+  background: #000;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  width: 100%;
+  max-width: 900px;
+  padding: 15px;
+}
+
+.search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.search input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  font-size: 16px;
+}
+
+.search button {
+  padding: 12px 18px;
+  background: #e50914;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.warning {
+  background: rgba(0,0,0,0.9);
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+iframe {
+  width: 100%;
+  height: 500px;
+  border: none;
+}
+
+@media (max-width:600px){
+  iframe { height: 260px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="search">
+    <input id="titulo" placeholder="Digite o nome do filme">
+    <button onclick="buscar()">Buscar</button>
+  </div>
+
+  <div class="warning" id="msg">
+    ⚠ Pode aparecer propaganda ao iniciar.<br>
+    Feche abas extras e continue.
+  </div>
+
+  <iframe
+    id="player"
+    sandbox="allow-scripts allow-same-origin allow-forms"
+    referrerpolicy="no-referrer"
+    allowfullscreen>
+  </iframe>
+
+</div>
+
+<script>
+const TMDB_KEY = "220d69505008f9f3cfc3d57b21174160";
+
+async function buscar() {
+  const nome = document.getElementById("titulo").value.trim();
+  if (!nome) return;
+
+  document.getElementById("msg").innerText = "🔎 Buscando filme...";
+
+  const res = await fetch(
+    `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(nome)}&language=pt-BR`
+  );
+
+  const data = await res.json();
+  if (!data.results || data.results.length === 0) {
+    document.getElementById("msg").innerText = "❌ Filme não encontrado";
+    return;
+  }
+
+  const movieId = data.results[0].id;
+
+  const info = await fetch(
+    `https://api.themoviedb.org/3/movie/${movieId}?api_key=${TMDB_KEY}`
+  );
+
+  const movie = await info.json();
+
+  if (!movie.imdb_id) {
+    document.getElementById("msg").innerText = "❌ IMDb ID não disponível";
+    return;
+  }
+
+  document.getElementById("msg").innerText = `🎬 ${movie.title}`;
+  document.getElementById("player").src =
+    `https://playerflixapi.com/filme/${movie.imdb_id}`;
+}
+
+// reduz popups
+window.open = () => null;
+</script>
+
+</body>
+</html>
